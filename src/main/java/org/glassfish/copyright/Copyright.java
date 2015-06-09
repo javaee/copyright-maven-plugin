@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -118,6 +118,7 @@ public class Copyright {
     private AbstractCopyright textCopyright;
     private AbstractCopyright propsCopyright;
     private AbstractCopyright batCopyright;
+    private AbstractCopyright mdCopyright;
     private AbstractCopyright jspCopyright;
 
     public static final List<String> ignoredDirs =
@@ -131,6 +132,7 @@ public class Copyright {
 	    textCopyright = new TextCopyright(this);
 	    propsCopyright = new PropertiesCopyright(this);
 	    batCopyright = new BatCopyright(this);
+	    mdCopyright = new MarkdownCopyright(this);
 	    jspCopyright = new JspCopyright(this);
 
 	    if (!doJava && !doXml && !doProps && !doText)
@@ -239,6 +241,11 @@ public class Copyright {
 		System.out.println("File " + file + " is a BAT file");
 	    if (doText)
 		batCopyright.checkCopyright(file);
+	} else if (mdCopyright.supports(file)) {
+	    if (debug)
+		System.out.println("File " + file + " is a markdown file");
+	    if (doText)
+		mdCopyright.checkCopyright(file);
 	} else if (propsCopyright.supports(file)) {
 	    if (debug)
 		System.out.println("File " + file + " is a properties file");
