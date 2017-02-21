@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -243,12 +243,18 @@ public abstract class AbstractCopyright {
 	}
 	if (c.ignoreYear)
 	    return;
+
 	String year = m.group(2);
+	int lastYearIndex = year.length() - 4;
+	if (year.endsWith(","))
+	    lastYearIndex--;
+	String lastYear = year.substring(lastYearIndex, lastYearIndex + 4);
+
 	if (isModified(file.getPath()))
 	    lc = thisYear;
 	else if (lc == null)
 	    lc = lastChanged(file.getPath());
-	String lastYear = year.substring(year.length() - 4);
+
 	if (!lastYear.equals(lc)) {
 	    err(file + ": Copyright year is wrong; is " +
 				lastYear + ", should be " + lc);
@@ -430,9 +436,15 @@ public abstract class AbstractCopyright {
      * Return the updated date string.
      */
     protected String addCopyrightDate(String date, String lastChanged) {
+	if (date.endsWith(","))	// trailing comma?
+	    date = date.substring(0, date.length() - 1);	// strip it
 	if (date.length() == 4) {	// singe year
-	    if (!date.equals(lastChanged))
-		date = date + (c.useComma ? ", " : "-") + lastChanged;
+	    if (!date.equals(lastChanged)) {
+		if (c.useComma)
+		    date = date + ", " + lastChanged + ",";
+		else
+		    date = date + "-" + lastChanged;
+	    }
 	} else {	// "2001-2007" or "2001,2003,2007"
 	    String lastDate = date.substring(
 			    date.length() - 4, date.length());
@@ -443,8 +455,12 @@ public abstract class AbstractCopyright {
 		else {
 		    // add range from first year to lastChanged
 		    date = date.substring(0, 4);
-                    if (!date.equals(lastChanged))
-                        date = date + (c.useComma ? ", " : "-") + lastChanged;
+                    if (!date.equals(lastChanged)) {
+			if (c.useComma)
+			    date = date + ", " + lastChanged + ",";
+			else
+			    date = date + "-" + lastChanged;
+		    }
 		}
 	    }
 	}
