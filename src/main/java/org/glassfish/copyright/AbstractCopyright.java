@@ -127,6 +127,8 @@ public abstract class AbstractCopyright {
 	    } else {
 		correctCopyright = getCopyrightText("cddl+gpl+ce-copyright.txt");
 		cpat = getCopyrightPattern("cddl+gpl+ce-copyright.txt");
+		if (c.alternateTemplate == null)
+		    acpat = getCopyrightPattern("cddl+gpl+ce-java.net-copyright.txt");
 	    }
 	    if (c.alternateTemplate != null)
 		acpat = getCopyrightPattern(c.alternateTemplate);
