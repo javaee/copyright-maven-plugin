@@ -200,7 +200,7 @@ public abstract class AbstractCopyright {
 	    return;
 	}
 	if (!matches(cpat, comment) &&
-		!(acpat != null && matches(acpat, comment)) &&
+		!(!c.normalize && acpat != null && matches(acpat, comment)) &&
 		!matches(apat, comment) &&
 		!matches(anewpat, comment) &&
 		!matches(mitspat, comment) &&
