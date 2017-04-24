@@ -39,7 +39,11 @@
  */
 
 /**
- * Support for files with XML syntax.
+ * Support for files with asciidoc file syntax.
+ * Comments of the form:
+ * /////////////////////////////////////////////////////////////////////////////
+ * comment
+ * /////////////////////////////////////////////////////////////////////////////
  *
  * @author	Bill Shannon
  */
@@ -47,40 +51,57 @@
 package org.glassfish.copyright;
 
 import java.io.*;
-import java.util.*;
 import java.util.regex.*;
 
-public class XmlCopyright extends CommonCopyright {
-    public XmlCopyright(Copyright c) {
+public class AsciidocCopyright extends CommonCopyright {
+    private String firstComment;
+    private static final String commentRegex = "////+";
+    private static final Pattern pat = Pattern.compile(commentRegex);
+    private static final String commentDelim =
+	"///////////////////////////////////////" +
+	"////////////////////////////////////////";	// 79 slashes
+
+    public AsciidocCopyright(Copyright c) {
 	super(c);
-	commentStart = "<!--";
-	commentEnd = "-->";
+	commentStart = commentDelim;
+	commentEnd = commentDelim;
 	commentPrefix = "    ";
     }
 
     /**
-     * Is this an XML file?
+     * Is this an asciidoc file?
      */
     protected boolean supports(File file) {
-	String fname = file.getName();
-	if (
-		    fname.endsWith(".xml") || fname.endsWith(".xsl") ||
-		    fname.endsWith(".html") || fname.endsWith(".xhtml") ||
-		    fname.endsWith(".dtd") || fname.endsWith(".xsd") ||
-		    fname.endsWith(".wsdl") || fname.endsWith(".inc") ||
-		    fname.endsWith(".jnlp") || fname.endsWith(".tld") ||
-		    fname.endsWith(".xcs") || fname.endsWith(".jsf") ||
-		    fname.endsWith(".hs") || fname.endsWith(".jhm")
-		) {
-	    return true;
-	}
-	if (startsWith(file, "<?xml"))
-	    return true;
-	return false;
+	return file.getName().endsWith(".adoc");
     }
 
-    protected boolean isPreamble(String line) {
-	return startsWith(line, "<?xml ") || startsWith(line, "<!DOCTYPE") ||
-		startsWith(line, "<html") || startsWith(line, "<head>");
+    /**
+     * Is this the start of a comment?
+     */
+    protected boolean isCommentStart(String line) {
+	if (line != null && line.matches(commentRegex)) {
+	    firstComment = line;
+	    return true;
+	} else
+	    return false;
+    }
+
+    /**
+     * Is this the end of a comment?
+     */
+    protected boolean isCommentEnd(String line) {
+	return line.equals(firstComment);
+    }
+
+    /**
+     * Return text after end of comment.
+     */
+    protected String commentTrailer(String line) {
+	Matcher m = pat.matcher(line);
+	if (m.matches()) {
+	    int end = m.end();
+	    return line.substring(end).trim();
+	}
+	return "";
     }
 }

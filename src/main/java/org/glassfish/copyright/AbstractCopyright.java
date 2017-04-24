@@ -54,7 +54,7 @@ public abstract class AbstractCopyright {
 
     private String correctCopyright;
     private Pattern cpat;
-    private Pattern acpat;
+    private List<Pattern> acpatlist = new ArrayList<Pattern>();
 
     private static String correctBSDCopyright;
     private static Pattern sunpat;
@@ -90,6 +90,13 @@ public abstract class AbstractCopyright {
     private static Pattern bsdpat = Pattern.compile(
 	"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS",
 	Pattern.MULTILINE);
+    private static final String derivedCopyrightIntro =
+	"\n" +
+	"\n" +
+	"This file incorporates work covered by the following copyright and\n" +
+	"permission notice:\n" +
+	"\n";
+    private static final String DEFAULT_CORRECT = "cddl+gpl+ce-copyright.txt";
 
     protected static final String licensor = "Oracle and/or its affiliates";
     protected static final String allrights = "All rights reserved.";
@@ -125,13 +132,22 @@ public abstract class AbstractCopyright {
 		correctCopyright = getCopyrightText(c.correctTemplate);
 		cpat = getCopyrightPattern(c.correctTemplate);
 	    } else {
-		correctCopyright = getCopyrightText("cddl+gpl+ce-copyright.txt");
+		correctCopyright = getCopyrightText(DEFAULT_CORRECT);
 		cpat = getCopyrightPattern("cddl+gpl+ce-copyright.txt");
 		if (c.alternateTemplate == null)
-		    acpat = getCopyrightPattern("cddl+gpl+ce-java.net-copyright.txt");
+		    acpatlist.add(getCopyrightPattern(
+					"cddl+gpl+ce-java.net-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+						"apacheold-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+						"apache-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+						"mitsallings-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+						"w3c-copyright.txt"));
 	    }
 	    if (c.alternateTemplate != null)
-		acpat = getCopyrightPattern(c.alternateTemplate);
+		acpatlist.add(getCopyrightPattern(c.alternateTemplate));
 	} catch (IOException ex) {
 	    throw new RuntimeException("Can't load copyright template", ex);
 	}
@@ -200,7 +216,7 @@ public abstract class AbstractCopyright {
 	    return;
 	}
 	if (!matches(cpat, comment) &&
-		!(!c.normalize && acpat != null && matches(acpat, comment)) &&
+		!(!c.normalize && matches(acpatlist, comment)) &&
 		!matches(apat, comment) &&
 		!matches(anewpat, comment) &&
 		!matches(mitspat, comment) &&
@@ -272,6 +288,17 @@ public abstract class AbstractCopyright {
      */
     protected boolean matches(Pattern pat, String s) {
 	return pat.matcher(s).matches();
+    }
+
+    /**
+     * Does the string match any of the patterns?
+     */
+    protected boolean matches(List<Pattern> patlist, String s) {
+	for (Pattern pat : patlist) {
+	    if (pat.matcher(s).matches())
+		return true;
+	}
+	return false;
     }
 
     enum RepairType { MISSING, WRONG, DATE };
@@ -555,6 +582,15 @@ public abstract class AbstractCopyright {
      */
     private static Pattern getCopyrightPattern(File file) throws IOException {
 	return copyrightToPattern(readCopyright(file, true));
+    }
+
+    /**
+     * Read a copyright regular expression from the file.
+     */
+    private static Pattern getDerivedCopyrightPattern(String base, String file)
+							throws IOException {
+	return copyrightToPattern(readCopyright(base, true) +
+			derivedCopyrightIntro + readCopyright(file, true));
     }
 
     private static Pattern copyrightToPattern(String comment) {

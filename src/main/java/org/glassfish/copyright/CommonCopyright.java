@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2011 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,7 +79,7 @@ public abstract class CommonCopyright extends AbstractCopyright {
 	    if (line.length() != 0)
 		break;
 	}
-	if (line == null || line.indexOf(commentStart) < 0)
+	if (!isCommentStart(line))
 	    return null;
 	String prefix = null;
 	while ((line = r.readLine()) != null) {
@@ -91,7 +91,7 @@ public abstract class CommonCopyright extends AbstractCopyright {
 		    continue;
 		prefix = findPrefix(line);
 	    }
-	    if (line.indexOf(commentEnd.trim()) >= 0)
+	    if (isCommentEnd(line))
 		break;		// end of comment
 	    if (line.indexOf("*/") >= 0)
 		break;		// end of comment
@@ -119,6 +119,32 @@ public abstract class CommonCopyright extends AbstractCopyright {
     }
 
     /**
+     * Is this the start of a comment?
+     */
+    protected boolean isCommentStart(String line) {
+	return line != null && line.indexOf(commentStart) >= 0;
+    }
+
+    /**
+     * Is this the end of a comment?
+     */
+    protected boolean isCommentEnd(String line) {
+	return line.indexOf(commentEnd.trim()) >= 0;
+    }
+
+    /**
+     * Return text after end of comment.
+     */
+    protected String commentTrailer(String line) {
+	int i = line.indexOf(commentEnd.trim());
+	if (i >= 0) {
+	    i += commentEnd.trim().length();
+	    return line.substring(i).trim();
+	}
+	return "";
+    }
+
+    /**
      * Skip the first comment block, replacing it with the correct copyright.
      */
     protected void replaceCopyright(BufferedReader in,
@@ -139,8 +165,7 @@ public abstract class CommonCopyright extends AbstractCopyright {
 
 	if (header.length() > 0 && !movePreamble)
 	    out.write(header.toString());
-	if (comment != null && line != null &&
-					line.indexOf(commentStart) >= 0) {
+	if (comment != null && isCommentStart(line)) {
 	    boolean sawCopyright = false;
 	    String trailer = "";
 	    while ((line = in.readLine()) != null) {
@@ -151,10 +176,8 @@ public abstract class CommonCopyright extends AbstractCopyright {
 			sawCopyright = true;
 		    }
 		}
-		int i = line.indexOf(commentEnd.trim());
-		if (i >= 0) {
-		    i += commentEnd.trim().length();
-		    trailer = line.substring(i).trim();
+		if (isCommentEnd(line)) {
+		    trailer = commentTrailer(line);
 		    break;		// end of comment
 		}
 	    }
@@ -205,7 +228,7 @@ public abstract class CommonCopyright extends AbstractCopyright {
 	    out.write(header.toString());
 	out.write(line);
 	out.write('\n');
-	if (line.indexOf(commentStart) >= 0) {
+	if (isCommentStart(line)) {
 	    boolean updated = false;
 	    while ((line = in.readLine()) != null) {
 		if (!updated && line.indexOf("Copyright") >= 0) {
@@ -219,7 +242,7 @@ public abstract class CommonCopyright extends AbstractCopyright {
 		}
 		out.write(line);
 		out.write('\n');
-		if (line.indexOf(commentEnd.trim()) >= 0)
+		if (isCommentEnd(line))
 		    break;		// end of comment
 	    }
 	    out.write('\n');		// blank line

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,8 +53,8 @@ import java.util.*;
 import java.util.regex.*;
 
 public class MarkdownCopyright extends AbstractCopyright {
-    protected String commentPrefix = "[//]: # ( ";
-    protected String commentSuffix = " )";
+    protected String commentPrefix = "[//]: # \" ";
+    protected String commentSuffix = " \"";
 
     public MarkdownCopyright(Copyright c) {
 	super(c);
@@ -93,7 +93,7 @@ public class MarkdownCopyright extends AbstractCopyright {
 	    if (line.endsWith(commentSuffix))
 		line = line.substring(0,
 					line.length() - commentSuffix.length());
-	    comment.append(strip(line)).append('\n');
+	    comment.append(strip(line).replace("''", "\"")).append('\n');
 	} while ((line = r.readLine()) != null);
 	int len = comment.length();
 	if (len >= 2 && comment.charAt(len - 1) == '\n' &&
@@ -198,9 +198,12 @@ public class MarkdownCopyright extends AbstractCopyright {
 	StringBuilder out = new StringBuilder();
 	try {
 	    String line;
+	    //out.append(commentPrefix).append(commentSuffix).append('\n');
 	    while ((line = r.readLine()) != null)
-		out.append(commentPrefix).append(strip(line)).
+		out.append(commentPrefix).
+		    append(strip(line).replace("\"", "''")).
 		    append(commentSuffix).append('\n');
+	    //out.append(commentPrefix).append(commentSuffix).append('\n');
 	    out.append("\n");
 	} catch (IOException ioex) {
 	    // can't happen
