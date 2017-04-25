@@ -1,4 +1,4 @@
-		Copyright check/repair maven plugin
+#   Copyright check/repair maven plugin
 
 I've created a maven plugin to check for the proper copyright/license headers
 and (in some cases) repair incorrect files.
@@ -6,43 +6,43 @@ and (in some cases) repair incorrect files.
 Configure it as follows:
 
     <build>
-	<plugins>
-	    <plugin>
-                <groupId>org.glassfish.copyright</groupId>
-                <artifactId>glassfish-copyright-maven-plugin</artifactId>
-		<configuration>
-		    <excludeFile>copyright-exclude</excludeFile>
-		</configuration>
-	    </plugin>
-	</plugins>
+        <plugins>
+            <plugin>
+                    <groupId>org.glassfish.copyright</groupId>
+                    <artifactId>glassfish-copyright-maven-plugin</artifactId>
+            <configuration>
+                <excludeFile>copyright-exclude</excludeFile>
+            </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 To check copyrights and report errors:
 
-$ mvn glassfish-copyright:copyright
+    $ mvn glassfish-copyright:copyright
 
 To only check copyrights, failing the build if there are any errors:
 
-$ mvn glassfish-copyright:check
+    $ mvn glassfish-copyright:check
 
 To repair any errors discovered (use this carefully, and check the results):
 
-$ mvn glassfish-copyright:repair
+    $ mvn glassfish-copyright:repair
 
 You can add the following items in the <configuration> section:
 
-	<excludeFile>file of exclude patterns</excludeFile>
-	<exclude>
-	    <pattern>an exclude pattern</pattern>
-	</exclude>
-	<scm>svn|mercurial|git</scm>	- defaults to svn
-	<debug>true</debug>		- turn on debugging
-	<update>false</update>		- for use with repair
-	<warnings>false</warnings>	- turn off warnings
-	<ignoreYear>true</ignoreYear>	- don't check that year is correct
-	<scmOnly>true</scmOnly>		- skip files not under SCM
-	<templateFile>file containg template</templateFile>
-	<useComma>true</useComma>	- use comma instead of dash in years
+    <excludeFile>file of exclude patterns</excludeFile>
+    <exclude>
+        <pattern>an exclude pattern</pattern>
+    </exclude>
+    <scm>svn|mercurial|git</scm>    <!-- defaults to svn -->
+    <debug>true</debug>     <!--  turn on debugging -->
+    <update>false</update>      <!--  for use with repair -->
+    <warnings>false</warnings>  <!--  turn off warnings -->
+    <ignoreYear>true</ignoreYear>   <!-- don't check that year is correct -->
+    <scmOnly>true</scmOnly>     <!--  skip files not under SCM -->
+    <templateFile>file containg template</templateFile>
+    <useComma>true</useComma>   <!--  use comma instead of dash in years -->
 
 
 There are various errors that this plugin will correct:
@@ -76,32 +76,34 @@ are matched against the path/file name.
 
 Good entries for an exclude list are:
 
-/MANIFEST.MF
-/META-INF/services/
-/README
-.gif
-.jpg
-.png
-.exe
-.ico
-.jar
-.zip
-.war
-.sql
-.jks
-.json
-.class
+    /MANIFEST.MF
+    /META-INF/services/
+    /README
+    .gif
+    .jpg
+    .png
+    .exe
+    .ico
+    .jar
+    .zip
+    .war
+    .sql
+    .jks
+    .json
+    .class
 
 
 You can also run the copyright plugin without using maven (assuming you've
 run it with maven at least once to load it into your local repository) using
 a script such as this (I call it "cr"):
 
-#!/bin/sh
-repo=~/.m2/repository/org/glassfish/copyright/glassfish-copyright-maven-plugin
-v=`ls $repo | grep '^[1-9]' | tail -1`
-java -cp $repo/$v/glassfish-copyright-maven-plugin-$v.jar \
-	org.glassfish.copyright.Copyright "$@"
+    #!/bin/sh
+    repo=~/.m2/repository/org/glassfish/copyright/glassfish-copyright-maven-plugin
+    v=`ls $repo | grep '^[1-9]' | tail -1`
+    java -cp $repo/$v/glassfish-copyright-maven-plugin-$v.jar \
+        org.glassfish.copyright.Copyright "$@"
 
 This allows more fine grained control over which files are checked
-(and repaired).  Use "cr -?" to get a list of options.
+(and repaired).
+
+Use "cr -?" to get a list of options.

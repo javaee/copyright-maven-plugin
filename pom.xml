@@ -44,9 +44,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
-	<groupId>net.java</groupId>
-	<artifactId>jvnet-parent</artifactId>
-	<version>1</version>
+        <groupId>net.java</groupId>
+        <artifactId>jvnet-parent</artifactId>
+        <version>1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.glassfish.copyright</groupId>
@@ -80,8 +80,8 @@
     </licenses>
 
     <issueManagement>
-        <system>jira</system>
-        <url>http://java.net/jira/browse/glassfish</url>
+        <system>GitHub</system>
+        <url>https://github.com/javaee/copyright-maven-plugin/issues</url>
     </issueManagement>
 
     <mailingLists>
@@ -93,31 +93,31 @@
 
     <scm>
         <connection>
-	  scm:svn:https://svn.java.net/svn/glassfish~svn/trunk/copyright-plugin
-	</connection>
+            scm:git:https://github.com/javaee/copyright-maven-plugin.git
+        </connection>
         <developerConnection>
-	  scm:svn:https://svn.java.net/svn/glassfish~svn/trunk/copyright-plugin
-	</developerConnection>
-        <url>http://java.net/projects/glassfish/sources/svn/show/trunk/copyright-plugin</url>
+            scm:git:git@github.com:javaee/copyright-maven-plugin.git
+        </developerConnection>
+        <url>https://github.com/javaee/copyright-maven-plugin</url>
     </scm>
 
     <build>
-	<defaultGoal>install</defaultGoal>
-	<resources>
-	    <resource>
-		<directory>src/main/resources</directory>
-		<filtering>true</filtering>
-	    </resource>
-	</resources>
-	<plugins>
-	    <plugin>
-		<artifactId>maven-compiler-plugin</artifactId>
-		<configuration>
-		    <source>1.6</source>
-		    <target>1.6</target>
-		</configuration>
-	    </plugin>
-	    <plugin>
+        <defaultGoal>install</defaultGoal>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <!--
                     Need this plugin to define target/classes as another
                     source directory so that the filtered Version.java
@@ -129,7 +129,9 @@
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
-                        <goals><goal>add-source</goal></goals>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
                         <configuration>
                             <sources>
                                 <source>target/classes</source>
@@ -137,35 +139,35 @@
                         </configuration>
                     </execution>
                 </executions>
-	    </plugin>
-	    <plugin>
-		<artifactId>maven-jar-plugin</artifactId>
-		<configuration>
-		    <excludes>
-			<exclude>**/*.java</exclude>
-		    </excludes>
-		</configuration>
-	    </plugin>
-	    <plugin>
-		<artifactId>maven-release-plugin</artifactId>
-		<configuration>
-		    <mavenExecutorId>forked-path</mavenExecutorId>
-		    <useReleaseProfile>false</useReleaseProfile>
-		    <arguments>${release.arguments}</arguments>
-		</configuration>
-	    </plugin>
-	    <!--  XXX - can't depend on myself
-	    <plugin>
-		<groupId>org.glassfish.copyright</groupId>
-		<artifactId>glassfish-copyright-maven-plugin</artifactId>
-		<version>${project.version}</version>
-	    </plugin>
-	    -->
-	</plugins>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <mavenExecutorId>forked-path</mavenExecutorId>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <arguments>${release.arguments}</arguments>
+                </configuration>
+            </plugin>
+            <!--  XXX - can't depend on myself
+            <plugin>
+                <groupId>org.glassfish.copyright</groupId>
+                <artifactId>glassfish-copyright-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </plugin>
+            -->
+        </plugins>
 
         <pluginManagement>
             <plugins>
-               <plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>2.4</version>
