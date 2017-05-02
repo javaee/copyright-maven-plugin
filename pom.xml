@@ -93,12 +93,12 @@
 
     <scm>
         <connection>
-	  scm:svn:https://svn.java.net/svn/glassfish~svn/trunk/copyright-plugin
+	  scm:git:git@github.com/javaee/copyright-maven-plugin.git
 	</connection>
         <developerConnection>
-	  scm:svn:https://svn.java.net/svn/glassfish~svn/trunk/copyright-plugin
+	  scm:git:git@github.com/javaee/copyright-maven-plugin.git
 	</developerConnection>
-        <url>http://java.net/projects/glassfish/sources/svn/show/trunk/copyright-plugin</url>
+        <url>git@github.com/javaee/copyright-maven-plugin.git</url>
     </scm>
 
     <build>
