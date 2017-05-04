@@ -154,7 +154,6 @@
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <useReleaseProfile>false</useReleaseProfile>
                     <arguments>${release.arguments}</arguments>
-                    <suppressCommitBeforeTag>true</suppressCommitBeforeTag>
                     <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
