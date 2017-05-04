@@ -52,7 +52,7 @@
     <groupId>org.glassfish.copyright</groupId>
     <artifactId>glassfish-copyright-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.43-SNAPSHOT</version>
+    <version>1.42-SNAPSHOT</version>
     <name>GlassFish Copyright Maven Plugin</name>
 
     <developers>
@@ -154,6 +154,8 @@
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <useReleaseProfile>false</useReleaseProfile>
                     <arguments>${release.arguments}</arguments>
+                    <suppressCommitBeforeTag>true</suppressCommitBeforeTag>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
             <!--  XXX - can't depend on myself
