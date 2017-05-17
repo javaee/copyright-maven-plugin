@@ -28,7 +28,7 @@ if [ $# -gt 0 ]
 then
 	files="$@"
 else
-	files=`echo *.java *.xml *.properties *.jsp`
+	files=`echo *.java *.xml *.properties *.jsp *.md *.adoc`
 fi
 
 for i in $files
