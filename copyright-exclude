@@ -1,0 +1,5 @@
+LICENSE
+README.md
+copyright-exclude
+src/test
+src/main/resources
