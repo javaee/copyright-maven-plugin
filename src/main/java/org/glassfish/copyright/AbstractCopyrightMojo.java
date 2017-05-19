@@ -175,13 +175,6 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
     protected String alternateTemplateFile;
 
     /**
-     * Update files, or leave updates in file.new?
-     *
-     * @parameter expression="${copyright.update}" default-value="true"
-     */
-    protected boolean update = true;
-
-    /**
      * Log output, initialize this in the execute method.
      */
     protected Log log;
@@ -233,7 +226,6 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
 	c.useComma = useComma;
 	c.skipNoSVN = scmOnly;
 	c.doHidden = doHidden;
-	c.dontUpdate = !update;
 
 	if (templateFile != null)
 	    c.correctTemplate = 
