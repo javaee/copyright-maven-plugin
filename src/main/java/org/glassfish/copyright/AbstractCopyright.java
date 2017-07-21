@@ -784,6 +784,8 @@ public abstract class AbstractCopyright {
 	ProcessBuilder pb;
 	if (c.mercurial)
 	    pb = new ProcessBuilder("hg", "status", file);
+	else if (c.git)
+	    pb = new ProcessBuilder("git", "status", "-s", file);
 	else
 	    pb = new ProcessBuilder("svn", "status", file);
 	pb.redirectErrorStream(true);
@@ -794,6 +796,7 @@ public abstract class AbstractCopyright {
 	boolean modified = false;
 	String line;
 	while ((line = r.readLine()) != null) {
+	    line = line.trim();
 	    if (line.startsWith("M") || line.startsWith("A"))
 		modified = true;
 	}
