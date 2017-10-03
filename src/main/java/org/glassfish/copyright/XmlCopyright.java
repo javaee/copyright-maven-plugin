@@ -81,6 +81,7 @@ public class XmlCopyright extends CommonCopyright {
 
     protected boolean isPreamble(String line) {
 	return startsWith(line, "<?xml ") || startsWith(line, "<!DOCTYPE") ||
-		startsWith(line, "<html") || startsWith(line, "<head>");
+		startsWith(line, "<html") || startsWith(line, "<head>") ||
+		startsWith(line, "<meta");
     }
 }
