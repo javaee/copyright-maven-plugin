@@ -147,6 +147,15 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
     protected boolean useComma;
 
     /**
+     * Set to true to preserve original copyright entries.
+     *
+     * @parameter expression="${copyright.preservecopyrights}"
+     *			default-value="false"
+     */
+    protected boolean preserveCopyrights = false;
+
+
+    /**
      * Skip files not under SCM?
      *
      * @parameter expression="${copyright.scmonly}"
@@ -173,6 +182,13 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
      * @parameter expression="${copyright.alternatetemplate}"
      */
     protected String alternateTemplateFile;
+
+    /**
+     * Copyright BSD template file.
+     *
+     * @parameter expression="${copyright.bsdtemplate}"
+     */
+    protected String bsdTemplateFile;
 
     /**
      * Log output, initialize this in the execute method.
@@ -224,6 +240,7 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
 	c.ignoreYear = ignoreYear;
 	c.normalize = normalize;
 	c.useComma = useComma;
+	c.preserveCopyrights = preserveCopyrights;
 	c.skipNoSVN = scmOnly;
 	c.doHidden = doHidden;
 
@@ -233,6 +250,9 @@ public abstract class AbstractCopyrightMojo extends AbstractMojo {
 	if (alternateTemplateFile != null)
 	    c.alternateTemplate = 
 		new File(getResourceFile(alternateTemplateFile).getPath());
+	if (bsdTemplateFile != null)
+	    c.correctBSDTemplate = 
+		new File(getResourceFile(bsdTemplateFile).getPath());
     }
 
     /**

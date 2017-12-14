@@ -44,7 +44,8 @@
  *
  * Usage: java -jar copyright.jar
  *		[-w] -[y] [-r] [-n] [-s] [-h] [-m] [-g] [-c] [-q] [-j] [-x] [-p]
- *		[-t] [-N] [-O] [-X pat] [-C file] [-V] [files ...]
+ *		[-t] [-N] [-O] [-X pat] [-C file] [-A file] [-B file] [-P] [-V]
+ *		[files ...]
  *
  * Options:
  *	-w	suppress warnings
@@ -66,6 +67,8 @@
  *	-X	exclude files matching pat (substring only)
  *	-C	file containing correct copyright template, using Java syntax
  *	-A	file containing alternate correct copyright template
+ *	-B	file containing correct BSD copyright template
+ *	-P	preserve original copyrights
  *	-V	print version number
  *
  * @author	Bill Shannon
@@ -96,8 +99,10 @@ public class Copyright {
     public boolean doXml = false;
     public boolean doProps = false;
     public boolean doText = false;
+    public boolean preserveCopyrights = false;
     public File correctTemplate;
     public File alternateTemplate;
+    public File correctBSDTemplate;
 
     public int nMissing;
     public int nEmpty;
@@ -341,6 +346,10 @@ public class Copyright {
 		c.correctTemplate = new File(argv[++optind]);
 	    } else if (argv[optind].equals("-A")) {
 		c.alternateTemplate = new File(argv[++optind]);
+	    } else if (argv[optind].equals("-B")) {
+		c.correctBSDTemplate = new File(argv[++optind]);
+	    } else if (argv[optind].equals("-P")) {
+		c.preserveCopyrights = true;
 	    } else if (argv[optind].equals("-V")) {
 		System.out.println("Version: " + Version.getVersion());
 		System.exit(0);
@@ -351,7 +360,7 @@ public class Copyright {
 		System.out.println("Usage: copyright " +
 		    "[-w] [-y] [-r] [-n] [-s] [-h] [-m] [-c] [-q] [-j] " +
 		    "[-x] [-p] [-t] [-N] [-O] [-V] [-X pat] [-C file] " +
-                    "[-A file] [files...]");
+                    "[-A file] [-B file] [-P] [files...]");
 		System.out.println("\t-w\tsuppress warnings");
 		System.out.println("\t-y\tdon't check that year is correct " +
 				    "(much faster)");
@@ -377,6 +386,9 @@ public class Copyright {
 				    "template, using Java syntax");
 		System.out.println("\t-A\tfile containing alternate correct " +
 				    "copyright template");
+		System.out.println("\t-B\tfile containing correct BSD " +
+				    "copyright template");
+		System.out.println("\t-P\tpreserve original copyrights");
 		System.out.println("\t-V\tprint version number");
 		System.exit(-1);
 	    } else {

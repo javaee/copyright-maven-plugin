@@ -42,7 +42,12 @@ You can add the following items in the <configuration> section:
     <ignoreYear>true</ignoreYear>   <!-- don't check that year is correct -->
     <scmOnly>true</scmOnly>     <!--  skip files not under SCM -->
     <templateFile>file containg template</templateFile>
+    <alternateTemplateFile>alterate template file</alternateTemplateFile>
+    <bsdTemplateFile>file containg BSD template</bsdTemplateFile>
     <useComma>true</useComma>   <!--  use comma instead of dash in years -->
+    <normalize>true</normalize> <!-- normalize format of repaired copyright -->
+    <preserveCopyrights>true</preserveCopyrights>
+				<!-- preserve original copyright entries -->
 
 
 There are various errors that this plugin will correct:

@@ -71,9 +71,30 @@ public abstract class AbstractCopyright {
     private static Pattern ocpat;
     private static Pattern oc2pat;
     private static Pattern njcpat;
+
+    // the general pattern for a single copyright line
+    private static final String COPYRIGHT_STRING =
+	"Copyright (\\(c\\) )?([-0-9, ]+) (by )?([A-Za-z].*)";
+    private static final String COPYRIGHT_LINE =
+	"^" + COPYRIGHT_STRING + "$";
+    private static final String COPYRIGHT_LINE_TEMPLATE =
+	"^Copyright (\\(c\\) )?YYYY (by )?([A-Za-z].*)$\n";
+
+    private static final String derivedCopyrightIntro =
+	"\n" +
+	"\n" +
+	"This file incorporates work covered by the following copyright and\n" +
+	"permission notice:\n" +
+	"\n";
+
+    private static final String DEFAULT_CORRECT = "cddl+gpl+ce-copyright.txt";
+
     // find a valid copyright line
-    protected static Pattern ypat =
-	Pattern.compile("Copyright (\\(c\\) )?([-0-9, ]+) (by )?[A-Z]");
+    protected static Pattern ypat = Pattern.compile(COPYRIGHT_STRING);
+    protected static Pattern ylpat =
+	Pattern.compile(COPYRIGHT_LINE, Pattern.MULTILINE);
+    protected static Pattern ytpat =
+	Pattern.compile(COPYRIGHT_LINE_TEMPLATE, Pattern.MULTILINE);
     // find the ending "*/" line
     private static Pattern endPat = Pattern.compile(" *\\*/");
     // find a secondary license (e.g., Apache)
@@ -86,26 +107,22 @@ public abstract class AbstractCopyright {
     // find the word "copyright" or "(c)" in the text
     private static Pattern cspat =
 	Pattern.compile("(\\b[Cc]opyright\\b|\\([Cc]\\))", Pattern.MULTILINE);
-    // a pattern to detect an existing BSD copyright
+    // a pattern to detect an existing BSD or EDL license
     private static Pattern bsdpat = Pattern.compile(
-	"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS",
-	Pattern.MULTILINE);
-    private static final String derivedCopyrightIntro =
-	"\n" +
-	"\n" +
-	"This file incorporates work covered by the following copyright and\n" +
-	"permission notice:\n" +
-	"\n";
-    private static final String DEFAULT_CORRECT = "cddl+gpl+ce-copyright.txt";
+	"(THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS)"+
+	"|(SPDX-License-Identifier: BSD-3-Clause)", Pattern.MULTILINE);
 
     protected static final String licensor = "Oracle and/or its affiliates";
     protected static final String allrights = "All rights reserved.";
+
+    // the pattern for additional copyright lines for other copyright holders
+    // after the primary copyright line
+    protected static final String otherCopyright = "(\n" + COPYRIGHT_LINE + ")*";
     protected static final String thisYear =
 	"" + Calendar.getInstance().get(Calendar.YEAR);
 
     static {
 	try {
-	    correctBSDCopyright = getCopyrightText("bsd-copyright.txt");
 	    sunpat = getCopyrightPattern("sun-cddl+gpl+ce-copyright.txt");
 	    apat = getCopyrightPattern("cddl+gpl+ce+apache-copyright.txt");
 	    sunapat = getCopyrightPattern("sun-cddl+gpl+ce+apache-copyright.txt");
@@ -131,6 +148,14 @@ public abstract class AbstractCopyright {
 	    if (c.correctTemplate != null) {
 		correctCopyright = getCopyrightText(c.correctTemplate);
 		cpat = getCopyrightPattern(c.correctTemplate);
+		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+						"apacheold-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+						"apache-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+						"mitsallings-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+						"w3c-copyright.txt"));
 	    } else {
 		correctCopyright = getCopyrightText(DEFAULT_CORRECT);
 		cpat = getCopyrightPattern("cddl+gpl+ce-copyright.txt");
@@ -148,6 +173,11 @@ public abstract class AbstractCopyright {
 	    }
 	    if (c.alternateTemplate != null)
 		acpatlist.add(getCopyrightPattern(c.alternateTemplate));
+	    // XXX - should we add derived copyrights based on the alternate?
+	    if (c.correctBSDTemplate != null)
+		correctBSDCopyright = getCopyrightText(c.correctBSDTemplate);
+	    else
+		correctBSDCopyright = getCopyrightText("bsd-copyright.txt");
 	} catch (IOException ex) {
 	    throw new RuntimeException("Can't load copyright template", ex);
 	}
@@ -386,10 +416,19 @@ public abstract class AbstractCopyright {
 		    secondaryLicense = comment.substring(m.start());
 		    if (secondaryLicense.length() > 0)
 			copyright += "\n\n" + secondaryLicense;
+		    // strip off secondary lic to avoid finding copyrights in it
+		    comment = comment.substring(0, m.start() - 1);
 		}
 	    }
+	    if (c.preserveCopyrights)
+		copyright = fixCopyright(copyright, getCopyrights(comment),
+					    year, licensor);
+	    else
+		copyright = fixCopyright(copyright, year, licensor);
+	} else {
+	    copyright = fixCopyright(copyright, year, licensor);
 	}
-	out.write(toComment(fixCopyright(copyright, year, licensor)));
+	out.write(toComment(copyright));
     }
 
     /**
@@ -470,30 +509,39 @@ public abstract class AbstractCopyright {
 	if (date.length() == 4) {	// singe year
 	    if (!date.equals(lastChanged)) {
 		if (c.useComma)
-		    date = date + ", " + lastChanged + ",";
+		    date = date + ", " + lastChanged;
 		else
 		    date = date + "-" + lastChanged;
 	    }
 	} else {	// "2001-2007" or "2001,2003,2007"
 	    String lastDate = date.substring(
 			    date.length() - 4, date.length());
-	    if (!lastDate.equals(lastChanged)) {
-		if (date.charAt(date.length() - 5) == '-')
-		    // strip off last year and replace it with lastChanged
-		    date = date.substring(0, date.length() - 4) + lastChanged;
-		else {
-		    // add range from first year to lastChanged
-		    date = date.substring(0, 4);
-                    if (!date.equals(lastChanged)) {
-			if (c.useComma)
-			    date = date + ", " + lastChanged + ",";
-			else
-			    date = date + "-" + lastChanged;
-		    }
+	    char sep = c.useComma ? ',' : '-';
+	    if (!lastDate.equals(lastChanged) || date.charAt(5) != sep) {
+		// add range from first year to lastChanged
+		date = date.substring(0, 4);
+		if (!date.equals(lastChanged)) {
+		    if (c.useComma)
+			date = date + ", " + lastChanged;
+		    else
+			date = date + "-" + lastChanged;
 		}
 	    }
 	}
 	return date;
+    }
+
+    /**
+     * Get the copyright lines in the string.
+     */
+    protected List<String> getCopyrights(String s) {
+	List<String> ret = new ArrayList<String>();
+	Matcher m = ylpat.matcher(s);
+	while (m.find()) {
+	    String cline = m.group();
+	    ret.add(cline);
+	}
+	return ret;
     }
 
     /**
@@ -503,6 +551,40 @@ public abstract class AbstractCopyright {
     protected String fixCopyright(String cr, String date, String lic) {
 	Matcher m = crpat.matcher(cr);
 	return m.replaceFirst(date + " " + lic + ". " + allrights);
+    }
+
+    /**
+     * Update the copyright line in cr using the supplied copyright lines.
+     * If one of the supplied copyright lines includes "lic" as the licensor,
+     * update it to use "date" as the copyright date.
+     */
+    protected String fixCopyright(String cr, List<String> crs,
+					String date, String lic) {
+	StringBuffer sb = new StringBuffer();
+	boolean found = false;
+	Matcher m = ytpat.matcher(cr);
+	if (m.find()) {	// XXX - should always be true
+	    m.appendReplacement(sb, "");	// just remove the template line
+	    for (String s : crs) {
+		if (!found && s.indexOf(lic) >= 0) {
+		    // found the copyright for the licensor, fix the date
+		    found = true;
+		    Matcher m2 = ylpat.matcher(s);
+		    if (m2.find()) {	// XXX - should always be true
+			sb.append(s.substring(0, m2.start(2)));
+			sb.append(date);
+			sb.append(s.substring(m2.end(2)));
+			sb.append('\n');
+		    } else {
+			sb.append(s).append('\n');
+		    }
+		} else {
+		    sb.append(s).append('\n');
+		}
+	    }
+	}
+	m.appendTail(sb);
+	return sb.toString();
     }
 
     /**
@@ -593,6 +675,15 @@ public abstract class AbstractCopyright {
 			derivedCopyrightIntro + readCopyright(file, true));
     }
 
+    /**
+     * Read a copyright regular expression from the file.
+     */
+    private static Pattern getDerivedCopyrightPattern(File base, String file)
+							throws IOException {
+	return copyrightToPattern(readCopyright(base, true) +
+			derivedCopyrightIntro + readCopyright(file, true));
+    }
+
     private static Pattern copyrightToPattern(String comment) {
 	StringBuilder copyright = new StringBuilder();
 	// ignore stupid NetBeans template text
@@ -645,8 +736,10 @@ public abstract class AbstractCopyright {
 		line = "";			// empty line
 	    if (pattern) {
 		line = Pattern.quote(line);
-		if (line.indexOf("YYYY") >= 0)
+		if (line.indexOf("YYYY") >= 0) {
 		    line = line.replace("YYYY", "\\E[-0-9, ]+\\Q");
+		    line = line + otherCopyright;
+		}
 	    }
 	    copyright.append(line).append('\n');
 	}

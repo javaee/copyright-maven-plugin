@@ -33,13 +33,18 @@ fi
 
 for i in $files
 do
+	opt=
 	$VERBOSE && echo $i:
-	$COPYRIGHT -y -r -n -w $i > $TMP
+	if [ -f "$i.opt" ]
+	then
+		opt=$(cat "$i.opt")
+	fi
+	$COPYRIGHT -y -r -n -w $opt $i > $TMP
 	if $GEN
 	then
 		if [ -n "`cat $TMP`" ]
 		then
-			$COPYRIGHT -y -r -n -w $i > $i.expect
+			$COPYRIGHT -y -r -n -w $opt $i > $i.expect
 			mv $i.new $i.new.expect
 		fi
 	elif [ -f $i.expect ]
@@ -48,7 +53,8 @@ do
 		then
 			if [ -f $i.new ]
 			then
-				sed -e s/THISYEAR/$THISYEAR/ < $i.new.expect > $i.new.expectyear
+				sed -e s/THISYEAR/$THISYEAR/ < $i.new.expect \
+							> $i.new.expectyear
 				if cmp -s $i.new.expectyear $i.new
 				then
 					:
