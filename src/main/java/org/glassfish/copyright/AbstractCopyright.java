@@ -70,7 +70,6 @@ public abstract class AbstractCopyright {
     private static Pattern cnocepat;
     private static Pattern ocpat;
     private static Pattern oc2pat;
-    private static Pattern njcpat;
 
     // the general pattern for a single copyright line
     private static final String COPYRIGHT_STRING =
@@ -135,7 +134,6 @@ public abstract class AbstractCopyright {
 	    cnocepat = getCopyrightPattern("cddl+gpl-copyright.txt");
 	    ocpat = getCopyrightPattern("cddl-copyright.txt");
 	    oc2pat = getCopyrightPattern("cddl2-copyright.txt");
-	    njcpat = getNonjavaCopyrightPattern("cddl+gpl+ce-copyright.txt");
 	} catch (IOException ex) {
 	    throw new RuntimeException("Copyright resource missing", ex);
 	}
@@ -752,22 +750,6 @@ public abstract class AbstractCopyright {
 		copyright.charAt(len - 2) == '\n')
 	    copyright.setLength(len - 1);
 	return copyright.toString();
-    }
-
-    /**
-     * Read a copyright regular expression from the named resource.
-     */
-    private static Pattern getNonjavaCopyrightPattern(String name)
-				throws IOException {
-	String copyright = readCopyright(name, true);
-	/*
-	if (c.debug) {
-	    System.out.println("Non-java pattern for " + name + ":");
-	    System.out.println(copyright);
-	    System.out.println();
-	}
-	*/
-	return Pattern.compile(copyright.toString(), Pattern.MULTILINE);
     }
 
     /**
