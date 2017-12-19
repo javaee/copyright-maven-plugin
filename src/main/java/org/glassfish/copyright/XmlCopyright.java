@@ -66,6 +66,7 @@ public class XmlCopyright extends CommonCopyright {
 	if (
 		    fname.endsWith(".xml") || fname.endsWith(".xsl") ||
 		    fname.endsWith(".html") || fname.endsWith(".xhtml") ||
+		    fname.endsWith(".htm") ||
 		    fname.endsWith(".dtd") || fname.endsWith(".xsd") ||
 		    fname.endsWith(".wsdl") || fname.endsWith(".inc") ||
 		    fname.endsWith(".jnlp") || fname.endsWith(".tld") ||
