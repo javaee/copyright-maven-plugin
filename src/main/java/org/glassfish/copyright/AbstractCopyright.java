@@ -200,8 +200,12 @@ public abstract class AbstractCopyright {
 		// yes, under SCM control
 	    } else {
 		lc = lastChanged(file.getPath());
-		if (lc.length() == 0)
+		if (lc.length() == 0) {
+		    if (c.verbose)
+			System.out.println(
+			    "Not under version control, skipped: " + file);
 		    return;	// no, not under SCM control
+		}
 	    }
 	}
 
@@ -289,8 +293,11 @@ public abstract class AbstractCopyright {
 	    c.nNoYear++;
 	    return;
 	}
-	if (c.ignoreYear)
+	if (c.ignoreYear) {
+	    if (c.verbose)
+		System.out.println("Ignoring year check: " + file);
 	    return;
+	}
 
 	String year = m.group(2);
 	int lastYearIndex = year.length() - 4;
@@ -311,6 +318,8 @@ public abstract class AbstractCopyright {
 		repair(file, comment, RepairType.DATE);
 	    return;
 	}
+	if (c.verbose)
+	    System.out.println("No errors: " + file);
     }
 
     /**
