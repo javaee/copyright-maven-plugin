@@ -129,7 +129,6 @@ public abstract class AbstractCopyright {
 	    anewpat = getCopyrightPattern("cddl+gpl+ce+apachenew-copyright.txt");
 	    sunanewpat = getCopyrightPattern("sun-cddl+gpl+ce+apachenew-copyright.txt");
 	    mitspat = getCopyrightPattern("cddl+gpl+ce+mitsallings-copyright.txt");
-	    bpat = getCopyrightPattern("bsd-copyright.txt");
 	    anpat = getCopyrightPattern("apache-copyright.txt");
 	    oapat = getCopyrightPattern("oracle-apache-copyright.txt");
 	    sunbpat = getCopyrightPattern("sun-bsd-copyright.txt");
@@ -174,10 +173,13 @@ public abstract class AbstractCopyright {
 	    if (c.alternateTemplate != null)
 		acpatlist.add(getCopyrightPattern(c.alternateTemplate));
 	    // XXX - should we add derived copyrights based on the alternate?
-	    if (c.correctBSDTemplate != null)
+	    if (c.correctBSDTemplate != null) {
 		correctBSDCopyright = getCopyrightText(c.correctBSDTemplate);
-	    else
+		bpat = getCopyrightPattern(c.correctBSDTemplate);
+	    } else {
 		correctBSDCopyright = getCopyrightText("bsd-copyright.txt");
+		bpat = getCopyrightPattern("bsd-copyright.txt");
+	    }
 	} catch (IOException ex) {
 	    throw new RuntimeException("Can't load copyright template", ex);
 	}
