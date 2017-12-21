@@ -53,19 +53,20 @@ public abstract class AbstractCopyright {
     protected Copyright c;	// our context and configuration
 
     private String correctCopyright;
+    private String correctBSDCopyright;
     private Pattern cpat;
+    private Pattern bpat;
     private List<Pattern> acpatlist = new ArrayList<Pattern>();
+    private List<Pattern> dcpatlist = new ArrayList<Pattern>();
 
-    private static String correctBSDCopyright;
-    private static Pattern sunpat;
-    private static Pattern apat;
-    private static Pattern sunapat;
-    private static Pattern anewpat;
-    private static Pattern sunanewpat;
-    private static Pattern mitspat;
-    private static Pattern bpat;
+    // patterns for good copyright headers
     private static Pattern anpat;
     private static Pattern oapat;
+
+    // patterns for bad copyright headers, used only to indicate what's wrong
+    private static Pattern sunpat;
+    private static Pattern sunapat;
+    private static Pattern sunanewpat;
     private static Pattern sunbpat;
     private static Pattern cnocepat;
     private static Pattern ocpat;
@@ -122,14 +123,14 @@ public abstract class AbstractCopyright {
 
     static {
 	try {
-	    sunpat = getCopyrightPattern("sun-cddl+gpl+ce-copyright.txt");
-	    apat = getCopyrightPattern("cddl+gpl+ce+apache-copyright.txt");
-	    sunapat = getCopyrightPattern("sun-cddl+gpl+ce+apache-copyright.txt");
-	    anewpat = getCopyrightPattern("cddl+gpl+ce+apachenew-copyright.txt");
-	    sunanewpat = getCopyrightPattern("sun-cddl+gpl+ce+apachenew-copyright.txt");
-	    mitspat = getCopyrightPattern("cddl+gpl+ce+mitsallings-copyright.txt");
+	    // good patterns
 	    anpat = getCopyrightPattern("apache-copyright.txt");
 	    oapat = getCopyrightPattern("oracle-apache-copyright.txt");
+
+	    // bad patterns
+	    sunpat = getCopyrightPattern("sun-cddl+gpl+ce-copyright.txt");
+	    sunapat = getCopyrightPattern("sun-cddl+gpl+ce+apache-copyright.txt");
+	    sunanewpat = getCopyrightPattern("sun-cddl+gpl+ce+apachenew-copyright.txt");
 	    sunbpat = getCopyrightPattern("sun-bsd-copyright.txt");
 	    cnocepat = getCopyrightPattern("cddl+gpl-copyright.txt");
 	    ocpat = getCopyrightPattern("cddl-copyright.txt");
@@ -145,13 +146,13 @@ public abstract class AbstractCopyright {
 	    if (c.correctTemplate != null) {
 		correctCopyright = getCopyrightText(c.correctTemplate);
 		cpat = getCopyrightPattern(c.correctTemplate);
-		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+		dcpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
 						"apacheold-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+		dcpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
 						"apache-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+		dcpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
 						"mitsallings-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
+		dcpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
 						"w3c-copyright.txt"));
 	    } else {
 		correctCopyright = getCopyrightText(DEFAULT_CORRECT);
@@ -159,18 +160,26 @@ public abstract class AbstractCopyright {
 		if (c.alternateTemplate == null)
 		    acpatlist.add(getCopyrightPattern(
 					"cddl+gpl+ce-java.net-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
 						"apacheold-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
-						"apache-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+			    "apache-copyright.txt"));
+		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
 						"mitsallings-copyright.txt"));
-		acpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
+		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
 						"w3c-copyright.txt"));
 	    }
-	    if (c.alternateTemplate != null)
+	    if (c.alternateTemplate != null) {
 		acpatlist.add(getCopyrightPattern(c.alternateTemplate));
-	    // XXX - should we add derived copyrights based on the alternate?
+		acpatlist.add(getDerivedCopyrightPattern(c.alternateTemplate,
+						"apacheold-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.alternateTemplate,
+						"apache-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.alternateTemplate,
+						"mitsallings-copyright.txt"));
+		acpatlist.add(getDerivedCopyrightPattern(c.alternateTemplate,
+						"w3c-copyright.txt"));
+	    }
 	    if (c.correctBSDTemplate != null) {
 		correctBSDCopyright = getCopyrightText(c.correctBSDTemplate);
 		bpat = getCopyrightPattern(c.correctBSDTemplate);
@@ -249,14 +258,14 @@ public abstract class AbstractCopyright {
 		repair(file, comment, RepairType.MISSING);
 	    return;
 	}
-	if (!matches(cpat, comment) &&
-		!(!c.normalize && matches(acpatlist, comment)) &&
-		!matches(apat, comment) &&
-		!matches(anewpat, comment) &&
-		!matches(mitspat, comment) &&
-		!matches(bpat, comment) &&
-		!matches(anpat, comment) &&
-		!matches(oapat, comment)) {
+	if (matches(cpat, comment) ||
+		matches(dcpatlist, comment) ||
+		(!c.normalize && matches(acpatlist, comment)) ||
+		matches(bpat, comment) ||
+		matches(anpat, comment) ||
+		matches(oapat, comment)) {
+	    // a good match
+	} else {
 	    if (matches(sunpat, comment)) {
 		err(file + ": Sun copyright");
 		c.nSun++;
@@ -416,20 +425,44 @@ public abstract class AbstractCopyright {
 				String comment) throws IOException {
 	String copyright = correctCopyright;
 	String secondaryLicense = null;
+	boolean preserve = c.preserveCopyrights;
 	if (comment != null) {
-	    if (bsdpat.matcher(comment).find())
+	    if (bsdpat.matcher(comment).find()) {
 		copyright = correctBSDCopyright;
-	    else {	// no secondary license allowed with BSD license
+		// no secondary license allowed with BSD license
+	    } else {
 		Matcher m = secLicPat.matcher(comment);
 		if (m.find()) {
 		    secondaryLicense = comment.substring(m.start());
 		    if (secondaryLicense.length() > 0)
 			copyright += "\n\n" + secondaryLicense;
-		    // strip off secondary lic to avoid finding copyrights in it
-		    comment = comment.substring(0, m.start() - 1);
+		    if (secondaryLicense.indexOf("Apache") >= 0) {
+			// need to convert secondary Apache license to
+			// primary Apache license.
+			// find the first blank line (after the secondary
+			// license notice) and use the original license that
+			// follows.
+			int nl = secondaryLicense.indexOf("\n\n");
+			if (nl > 0) {	// XXX - should always be true
+			    copyright = secondaryLicense.substring(nl + 2);
+			    // need to convert actual copyright to template
+			    Matcher y = ypat.matcher(copyright);
+			    if (y.find()) {
+				copyright = copyright.substring(0, y.start(2)) +
+					"YYYY" + copyright.substring(y.end(2));
+			    }
+			}
+			// if new style Apache license, don't include copyrights
+			if (copyright.indexOf("NOTICE") >= 0)
+			    comment = "";
+			preserve = true;
+		    } else {
+			// strip off sec lic to avoid finding copyrights in it
+			comment = comment.substring(0, m.start() - 1);
+		    }
 		}
 	    }
-	    if (c.preserveCopyrights)
+	    if (preserve)
 		copyright = fixCopyright(copyright, getCopyrights(comment),
 					    year, licensor);
 	    else
@@ -570,10 +603,21 @@ public abstract class AbstractCopyright {
     protected String fixCopyright(String cr, List<String> crs,
 					String date, String lic) {
 	StringBuffer sb = new StringBuffer();
-	boolean found = false;
 	Matcher m = ytpat.matcher(cr);
-	if (m.find()) {	// XXX - should always be true
+	if (m.find()) {	// might not be true for new Apache header
 	    m.appendReplacement(sb, "");	// just remove the template line
+	    boolean found = false;
+	    for (String s : crs) {
+		if (s.indexOf(lic) >= 0) {
+		    // found the copyright for the licensor
+		    found = true;
+		    break;
+		}
+	    }
+	    // didn't find an entry for licensor, add one at the top
+	    if (!found && !crs.isEmpty())
+		crs.add(0, "Copyright (c) " + date + " " + lic);
+	    found = false;	// start again
 	    for (String s : crs) {
 		if (!found && s.indexOf(lic) >= 0) {
 		    // found the copyright for the licensor, fix the date
