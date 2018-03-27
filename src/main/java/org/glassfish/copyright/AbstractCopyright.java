@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2018 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,6 +60,7 @@ public abstract class AbstractCopyright {
     private List<Pattern> dcpatlist = new ArrayList<Pattern>();
 
     // patterns for good copyright headers
+    private static Pattern apat;
     private static Pattern anpat;
     private static Pattern oapat;
 
@@ -115,15 +116,13 @@ public abstract class AbstractCopyright {
     protected static final String licensor = "Oracle and/or its affiliates";
     protected static final String allrights = "All rights reserved.";
 
-    // the pattern for additional copyright lines for other copyright holders
-    // after the primary copyright line
-    protected static final String otherCopyright = "(\n" + COPYRIGHT_LINE + ")*";
     protected static final String thisYear =
 	"" + Calendar.getInstance().get(Calendar.YEAR);
 
     static {
 	try {
 	    // good patterns
+	    apat = getCopyrightPattern("apacheold-copyright.txt");
 	    anpat = getCopyrightPattern("apache-copyright.txt");
 	    oapat = getCopyrightPattern("oracle-apache-copyright.txt");
 
@@ -262,6 +261,7 @@ public abstract class AbstractCopyright {
 		matches(dcpatlist, comment) ||
 		(!c.normalize && matches(acpatlist, comment)) ||
 		matches(bpat, comment) ||
+		matches(apat, comment) ||
 		matches(anpat, comment) ||
 		matches(oapat, comment)) {
 	    // a good match
@@ -452,14 +452,21 @@ public abstract class AbstractCopyright {
 					"YYYY" + copyright.substring(y.end(2));
 			    }
 			}
-			// if new style Apache license, don't include copyrights
-			if (copyright.indexOf("NOTICE") >= 0)
-			    comment = "";
 			preserve = true;
 		    } else {
 			// strip off sec lic to avoid finding copyrights in it
 			comment = comment.substring(0, m.start() - 1);
 		    }
+		} else if (comment.contains("Apache")) {
+		    // the primary license is Apache, preserve it
+		    copyright = comment;
+		    // need to convert actual copyright to template
+		    Matcher y = ypat.matcher(copyright);
+		    if (y.find()) {
+			copyright = copyright.substring(0, y.start(2)) +
+				"YYYY" + copyright.substring(y.end(2));
+		    }
+		    preserve = true;
 		}
 	    }
 	    if (preserve)
@@ -604,38 +611,49 @@ public abstract class AbstractCopyright {
 					String date, String lic) {
 	StringBuffer sb = new StringBuffer();
 	Matcher m = ytpat.matcher(cr);
+	boolean needBlank = true;
 	if (m.find()) {	// might not be true for new Apache header
 	    m.appendReplacement(sb, "");	// just remove the template line
-	    boolean found = false;
-	    for (String s : crs) {
-		if (s.indexOf(lic) >= 0) {
-		    // found the copyright for the licensor
-		    found = true;
-		    break;
-		}
+	    // if we found a copyright template, assume there's a blank line
+	    // after it and we don't need to add our own
+	    needBlank = false;
+	}
+
+	boolean found = false;
+	for (String s : crs) {
+	    if (s.indexOf(lic) >= 0) {
+		// found the copyright for the licensor
+		found = true;
+		break;
 	    }
-	    // didn't find an entry for licensor, add one at the top
-	    if (!found && !crs.isEmpty())
-		crs.add(0, "Copyright (c) " + date + " " + lic);
-	    found = false;	// start again
-	    for (String s : crs) {
-		if (!found && s.indexOf(lic) >= 0) {
-		    // found the copyright for the licensor, fix the date
-		    found = true;
-		    Matcher m2 = ylpat.matcher(s);
-		    if (m2.find()) {	// XXX - should always be true
-			sb.append(s.substring(0, m2.start(2)));
-			sb.append(date);
-			sb.append(s.substring(m2.end(2)));
-			sb.append('\n');
-		    } else {
-			sb.append(s).append('\n');
-		    }
+	}
+	// didn't find an entry for licensor, add one at the top
+	if (!found && !crs.isEmpty())
+	    crs.add(0, "Copyright (c) " + date + " " +
+			lic + ". " + allrights);
+	found = false;	// start again
+	for (String s : crs) {
+	    if (!found && s.indexOf(lic) >= 0) {
+		// found the copyright for the licensor, fix the date
+		found = true;
+		Matcher m2 = ylpat.matcher(s);
+		if (m2.find()) {	// XXX - should always be true
+		    sb.append(s.substring(0, m2.start(2)));
+		    sb.append(date);
+		    sb.append(s.substring(m2.end(2)));
+		    sb.append('\n');
 		} else {
 		    sb.append(s).append('\n');
 		}
+	    } else if (found && s.contains("Sun Microsystems")) {
+		// purge old Sun copyright
+	    } else {
+		sb.append(s).append('\n');
 	    }
 	}
+
+	if (needBlank)
+	    sb.append('\n');	// need a blank line after the copyright lines
 	m.appendTail(sb);
 	return sb.toString();
     }
@@ -709,14 +727,14 @@ public abstract class AbstractCopyright {
      * the pattern to ignore language-specific comment characters.
      */
     private static Pattern getCopyrightPattern(String name) throws IOException {
-	return copyrightToPattern(readCopyright(name, true));
+	return copyrightToPattern(readCopyright(name, true, false));
     }
 
     /**
      * Read a copyright regular expression from the file.
      */
     private static Pattern getCopyrightPattern(File file) throws IOException {
-	return copyrightToPattern(readCopyright(file, true));
+	return copyrightToPattern(readCopyright(file, true, false));
     }
 
     /**
@@ -724,8 +742,8 @@ public abstract class AbstractCopyright {
      */
     private static Pattern getDerivedCopyrightPattern(String base, String file)
 							throws IOException {
-	return copyrightToPattern(readCopyright(base, true) +
-			derivedCopyrightIntro + readCopyright(file, true));
+	return copyrightToPattern(readCopyright(base, true, false) +
+		    derivedCopyrightIntro + readCopyright(file, true, true));
     }
 
     /**
@@ -733,8 +751,8 @@ public abstract class AbstractCopyright {
      */
     private static Pattern getDerivedCopyrightPattern(File base, String file)
 							throws IOException {
-	return copyrightToPattern(readCopyright(base, true) +
-			derivedCopyrightIntro + readCopyright(file, true));
+	return copyrightToPattern(readCopyright(base, true, false) +
+		    derivedCopyrightIntro + readCopyright(file, true, true));
     }
 
     private static Pattern copyrightToPattern(String comment) {
@@ -748,8 +766,8 @@ public abstract class AbstractCopyright {
 	return Pattern.compile(copyright.toString(), Pattern.MULTILINE);
     }
 
-    private static String readCopyright(String name, boolean pattern)
-				throws IOException {
+    private static String readCopyright(String name, boolean pattern,
+				boolean secondary) throws IOException {
 	BufferedReader r = null;
 	try {
 	    InputStream is = Copyright.class.getResourceAsStream(
@@ -757,29 +775,36 @@ public abstract class AbstractCopyright {
 	    if (is == null)
 		is = Copyright.class.getResourceAsStream(name);
 	    r = new BufferedReader(new InputStreamReader(is));
-	    return readCopyrightStream(r, pattern);
+	    return readCopyrightStream(r, pattern, secondary);
 	} finally {
 	    if (r != null)
 		r.close();
 	}
     }
 
-    private static String readCopyright(File file, boolean pattern)
-				throws IOException {
+    private static String readCopyright(File file, boolean pattern,
+				boolean secondary) throws IOException {
 	BufferedReader r = null;
 	try {
 	    r = new BufferedReader(new FileReader(file));
-	    return readCopyrightStream(r, pattern);
+	    return readCopyrightStream(r, pattern, secondary);
 	} finally {
 	    if (r != null)
 		r.close();
 	}
     }
 
-    private static String readCopyrightStream(BufferedReader r, boolean pattern)
-				throws IOException {
+    /**
+     * Read a copyright from the BufferedReader.
+     * If pattern is true, convert it to a regular expression pattern.
+     * If secondary is true, this is a secondary license that's
+     * concatenated to a primary license.
+     */
+    private static String readCopyrightStream(BufferedReader r, boolean pattern,
+				boolean secondary) throws IOException {
 	StringBuilder copyright = new StringBuilder();
 	String line = r.readLine();	// read the "/*" line
+	boolean sawCopyright = false;
 	while ((line = r.readLine()) != null) {
 	    if (line.equals(" */"))	// ending comment line
 		break;
@@ -790,12 +815,23 @@ public abstract class AbstractCopyright {
 	    if (pattern) {
 		line = Pattern.quote(line);
 		if (line.indexOf("YYYY") >= 0) {
+		    sawCopyright = true;
 		    line = line.replace("YYYY", "\\E[-0-9, ]+\\Q");
-		    line = line + otherCopyright;
+		    if (!secondary) {
+			if (line.contains(licensor))
+			    line = line + "(\n" + COPYRIGHT_LINE + ")*";
+			else
+			    line = "(" + COPYRIGHT_LINE + "\n)*" + line;
+		    }
 		}
 	    }
 	    copyright.append(line).append('\n');
 	}
+	// if no copyright line in the template, allow a copyright
+	// at the beginning
+	if (!sawCopyright && pattern && !secondary)
+	    copyright.insert(0, "((" + COPYRIGHT_LINE + "\n)+\n)?");
+
 	// strip off one optional trailing blank line, for consistency
 	// with CommonCopyright.readComment.
 	int len = copyright.length();
@@ -809,14 +845,14 @@ public abstract class AbstractCopyright {
      * Read the copyright text from the named resource.
      */
     private static String getCopyrightText(String name) throws IOException {
-	return readCopyright(name, false);
+	return readCopyright(name, false, false);
     }
 
     /**
      * Read the copyright text from the file.
      */
     private static String getCopyrightText(File file) throws IOException {
-	return readCopyright(file, false);
+	return readCopyright(file, false, false);
     }
 
     /**
