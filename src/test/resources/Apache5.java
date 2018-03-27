@@ -1,6 +1,4 @@
 /*
- * Copyright (c) 2010-THISYEAR Oracle and/or its affiliates. All rights reserved.
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,3 +15,4 @@
  * limitations under the License.
  */
 
+package test;

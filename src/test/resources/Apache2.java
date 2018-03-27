@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-THISYEAR Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002-2004 Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,3 +17,4 @@
  * limitations under the License.
  */
 
+package test;
