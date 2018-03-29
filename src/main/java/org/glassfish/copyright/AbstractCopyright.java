@@ -89,6 +89,9 @@ public abstract class AbstractCopyright {
 	"\n";
 
     private static final String DEFAULT_CORRECT = "cddl+gpl+ce-copyright.txt";
+    private static final String DEFAULT_ALTERNATE =
+					"cddl+gpl+ce-java.net-copyright.txt";
+    private static final String DEFAULT_BSD = "bsd-copyright.txt";
 
     // find a valid copyright line
     protected static Pattern ypat = Pattern.compile(COPYRIGHT_STRING);
@@ -153,12 +156,11 @@ public abstract class AbstractCopyright {
 						"mitsallings-copyright.txt"));
 		dcpatlist.add(getDerivedCopyrightPattern(c.correctTemplate,
 						"w3c-copyright.txt"));
+		// if using a specified template and no specified alternate,
+		// don't use the default alternate
 	    } else {
 		correctCopyright = getCopyrightText(DEFAULT_CORRECT);
-		cpat = getCopyrightPattern("cddl+gpl+ce-copyright.txt");
-		if (c.alternateTemplate == null)
-		    acpatlist.add(getCopyrightPattern(
-					"cddl+gpl+ce-java.net-copyright.txt"));
+		cpat = getCopyrightPattern(DEFAULT_CORRECT);
 		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
 						"apacheold-copyright.txt"));
 		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
@@ -167,6 +169,19 @@ public abstract class AbstractCopyright {
 						"mitsallings-copyright.txt"));
 		dcpatlist.add(getDerivedCopyrightPattern(DEFAULT_CORRECT,
 						"w3c-copyright.txt"));
+		// if using the default template and the default alternate,
+		// add all the derived alternates
+		if (c.alternateTemplate == null) {
+		    acpatlist.add(getCopyrightPattern(DEFAULT_ALTERNATE));
+		    acpatlist.add(getDerivedCopyrightPattern(DEFAULT_ALTERNATE,
+						"apacheold-copyright.txt"));
+		    acpatlist.add(getDerivedCopyrightPattern(DEFAULT_ALTERNATE,
+						"apache-copyright.txt"));
+		    acpatlist.add(getDerivedCopyrightPattern(DEFAULT_ALTERNATE,
+						"mitsallings-copyright.txt"));
+		    acpatlist.add(getDerivedCopyrightPattern(DEFAULT_ALTERNATE,
+						"w3c-copyright.txt"));
+		}
 	    }
 	    if (c.alternateTemplate != null) {
 		acpatlist.add(getCopyrightPattern(c.alternateTemplate));
@@ -183,8 +198,8 @@ public abstract class AbstractCopyright {
 		correctBSDCopyright = getCopyrightText(c.correctBSDTemplate);
 		bpat = getCopyrightPattern(c.correctBSDTemplate);
 	    } else {
-		correctBSDCopyright = getCopyrightText("bsd-copyright.txt");
-		bpat = getCopyrightPattern("bsd-copyright.txt");
+		correctBSDCopyright = getCopyrightText(DEFAULT_BSD);
+		bpat = getCopyrightPattern(DEFAULT_BSD);
 	    }
 	} catch (IOException ex) {
 	    throw new RuntimeException("Can't load copyright template", ex);
@@ -258,7 +273,8 @@ public abstract class AbstractCopyright {
 	    return;
 	}
 	if (matches(cpat, comment) ||
-		matches(dcpatlist, comment) ||
+		// if normalizing, don't consider any derived or alternates
+		(!c.normalize && matches(dcpatlist, comment)) ||
 		(!c.normalize && matches(acpatlist, comment)) ||
 		matches(bpat, comment) ||
 		matches(apat, comment) ||
