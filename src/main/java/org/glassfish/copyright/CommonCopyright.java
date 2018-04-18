@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2018 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -172,7 +172,8 @@ public abstract class CommonCopyright extends AbstractCopyright {
 		if (!sawCopyright && line.indexOf("Copyright") >= 0) {
 		    Matcher m = ypat.matcher(line);
 		    if (m.find()) {
-			lastChanged = addCopyrightDate(m.group(2), lastChanged);
+			lastChanged = addCopyrightDate(m.group(ypat_YEAR),
+							lastChanged);
 			sawCopyright = true;
 		    }
 		}
@@ -234,9 +235,10 @@ public abstract class CommonCopyright extends AbstractCopyright {
 		if (!updated && line.indexOf("Copyright") >= 0) {
 		    Matcher m = ypat.matcher(line);
 		    if (m.find()) {
-			String y = addCopyrightDate(m.group(2), lastChanged);
-			line = line.substring(0, m.start(2)) + y +
-						line.substring(m.end(2));
+			String y = addCopyrightDate(m.group(ypat_YEAR),
+						    lastChanged);
+			line = line.substring(0, m.start(ypat_YEAR)) + y +
+					    line.substring(m.end(ypat_YEAR));
 			updated = true;
 		    }
 		}

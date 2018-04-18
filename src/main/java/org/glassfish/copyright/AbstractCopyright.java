@@ -75,7 +75,7 @@ public abstract class AbstractCopyright {
 
     // the general pattern for a single copyright line
     private static final String COPYRIGHT_STRING =
-	"Copyright (\\(c\\) )?([-0-9, ]+) (by )?([A-Za-z].*)";
+	"(Portions )?Copyright (\\(c\\) )?([-0-9, ]+) (by )?([A-Za-z].*)";
     private static final String COPYRIGHT_LINE =
 	"^" + COPYRIGHT_STRING + "$";
     private static final String COPYRIGHT_LINE_TEMPLATE =
@@ -95,8 +95,10 @@ public abstract class AbstractCopyright {
 
     // find a valid copyright line
     protected static Pattern ypat = Pattern.compile(COPYRIGHT_STRING);
+    protected static final int ypat_YEAR = 3;	// regex group matching year
     protected static Pattern ylpat =
 	Pattern.compile(COPYRIGHT_LINE, Pattern.MULTILINE);
+    protected static final int ylpat_YEAR = 3;	// regex group matching year
     protected static Pattern ytpat =
 	Pattern.compile(COPYRIGHT_LINE_TEMPLATE, Pattern.MULTILINE);
     // find the ending "*/" line
@@ -324,7 +326,7 @@ public abstract class AbstractCopyright {
 	    return;
 	}
 
-	String year = m.group(2);
+	String year = m.group(ypat_YEAR);
 	int lastYearIndex = year.length() - 4;
 	if (year.endsWith(","))
 	    lastYearIndex--;
@@ -464,8 +466,10 @@ public abstract class AbstractCopyright {
 			    // need to convert actual copyright to template
 			    Matcher y = ypat.matcher(copyright);
 			    if (y.find()) {
-				copyright = copyright.substring(0, y.start(2)) +
-					"YYYY" + copyright.substring(y.end(2));
+				copyright =
+				    copyright.substring(0, y.start(ypat_YEAR)) +
+				    "YYYY" +
+				    copyright.substring(y.end(ypat_YEAR));
 			    }
 			}
 			preserve = true;
@@ -479,8 +483,8 @@ public abstract class AbstractCopyright {
 		    // need to convert actual copyright to template
 		    Matcher y = ypat.matcher(copyright);
 		    if (y.find()) {
-			copyright = copyright.substring(0, y.start(2)) +
-				"YYYY" + copyright.substring(y.end(2));
+			copyright = copyright.substring(0, y.start(ypat_YEAR)) +
+			    "YYYY" + copyright.substring(y.end(ypat_YEAR));
 		    }
 		    preserve = true;
 		}
@@ -654,9 +658,9 @@ public abstract class AbstractCopyright {
 		found = true;
 		Matcher m2 = ylpat.matcher(s);
 		if (m2.find()) {	// XXX - should always be true
-		    sb.append(s.substring(0, m2.start(2)));
+		    sb.append(s.substring(0, m2.start(ylpat_YEAR)));
 		    sb.append(date);
-		    sb.append(s.substring(m2.end(2)));
+		    sb.append(s.substring(m2.end(ylpat_YEAR)));
 		    sb.append('\n');
 		} else {
 		    sb.append(s).append('\n');
