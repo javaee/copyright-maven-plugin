@@ -54,6 +54,7 @@ public abstract class AbstractCopyright {
 
     private String correctCopyright;
     private String correctBSDCopyright;
+    private static String licensor = "Oracle and/or its affiliates";
     private Pattern cpat;
     private Pattern bpat;
     private List<Pattern> acpatlist = new ArrayList<Pattern>();
@@ -118,7 +119,6 @@ public abstract class AbstractCopyright {
 	"(THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS)"+
 	"|(SPDX-License-Identifier: BSD-3-Clause)", Pattern.MULTILINE);
 
-    protected static final String licensor = "Oracle and/or its affiliates";
     protected static final String allrights = "All rights reserved.";
 
     protected static final String thisYear =
@@ -202,6 +202,20 @@ public abstract class AbstractCopyright {
 	    } else {
 		correctBSDCopyright = getCopyrightText(DEFAULT_BSD);
 		bpat = getCopyrightPattern(DEFAULT_BSD);
+	    }
+
+	    // extract the licensor from the template
+	    // XXX - shouldn't stored in a static
+	    try {
+		int yyyy = correctCopyright.indexOf("YYYY");
+		if (yyyy > 0) {
+		    int dot = correctCopyright.indexOf(".", yyyy);
+		    if (dot < 0)
+			dot = correctCopyright.indexOf("\n", yyyy);
+		    if (dot > 0)
+			licensor = correctCopyright.substring(yyyy + 5, dot);
+		}
+	    } catch (StringIndexOutOfBoundsException ex) {
 	    }
 	} catch (IOException ex) {
 	    throw new RuntimeException("Can't load copyright template", ex);
@@ -697,8 +711,8 @@ public abstract class AbstractCopyright {
     protected static String findPrefix(String line) {
 	for (int i = 0; i < line.length(); i++) {
 	    char c = line.charAt(i);
-	    if (Character.isLetterOrDigit(c) ||
-		    c == '\"' || c == '[' || c == '(')	// end of prefix
+	    if (Character.isLetterOrDigit(c) || c == '\"' || c == '[' ||
+		    c == '(' || c == '%')	// end of prefix
 		return line.substring(0, i);
 	}
 	return "";
