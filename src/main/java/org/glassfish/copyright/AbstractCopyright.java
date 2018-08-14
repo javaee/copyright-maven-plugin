@@ -543,6 +543,7 @@ public abstract class AbstractCopyright {
 
     /**
      * Warn if there's another copyright statement in the file.
+     * Called with "in" positioned after the main copyright header.
      */
     protected void warnCopyright(File file, BufferedReader in)
 				throws IOException {
@@ -550,8 +551,7 @@ public abstract class AbstractCopyright {
 	while ((line = in.readLine()) != null) {
 	    Matcher m = ypat.matcher(line);
 	    if (m.find()) {
-		if (line.indexOf(licensor) < 0)
-		    System.out.println(file +
+		System.out.println(file +
 				    ": WARNING: extra copyright: " + line);
 	    }
 	    /*
