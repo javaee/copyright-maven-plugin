@@ -516,8 +516,6 @@ public abstract class AbstractCopyright {
 
     /**
      * Skip the first comment block, replacing it with the correct copyright.
-     * If the file starts with a "package" statement,
-     * save it and write it out after the new copyright.
      */
     protected abstract void replaceCopyright(BufferedReader in,
 			BufferedWriter out, String comment, String lastChanged)

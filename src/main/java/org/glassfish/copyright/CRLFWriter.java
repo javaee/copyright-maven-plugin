@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2018 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,52 +38,60 @@
  * holder.
  */
 
-/**
- * Support for files with XML syntax.
- *
- * @author	Bill Shannon
- */
-
 package org.glassfish.copyright;
 
 import java.io.*;
-import java.util.*;
-import java.util.regex.*;
 
-public class XmlCopyright extends CommonCopyright {
-    public XmlCopyright(Copyright c) {
-	super(c);
-	commentStart = "<!--";
-	commentEnd = "-->";
-	commentPrefix = "    ";
+/**
+ * Convert lines into the canonical Windows format, that is,
+ * terminate lines with CRLF. <p>
+ */
+public class CRLFWriter extends FilterWriter {
+    protected int lastb = -1;
+    protected static char[] newline = new char[] { '\r', '\n' };
+
+    public CRLFWriter(Writer out) {
+	super(out);
     }
 
-    /**
-     * Is this an XML file?
-     */
-    protected boolean supports(File file) {
-	String fname = file.getName();
-	if (
-		    fname.endsWith(".xml") || fname.endsWith(".xsl") ||
-		    fname.endsWith(".html") || fname.endsWith(".xhtml") ||
-		    fname.endsWith(".htm") ||
-		    fname.endsWith(".dtd") || fname.endsWith(".xsd") ||
-		    fname.endsWith(".wsdl") || fname.endsWith(".inc") ||
-		    fname.endsWith(".jnlp") || fname.endsWith(".tld") ||
-		    fname.endsWith(".xcs") || fname.endsWith(".jsf") ||
-		    fname.endsWith(".hs") || fname.endsWith(".jhm") ||
-		    (fname.equals("build.properties") && startsWith(file, "<"))
-		) {
-	    return true;
+    @Override
+    public void write(int b) throws IOException {
+	if (b == '\r') {
+	    out.write(newline);
+	} else if (b == '\n') {
+	    if (lastb != '\r')
+		out.write(newline);
+	} else {
+	    out.write(b);
 	}
-	if (startsWith(file, "<?xml"))
-	    return true;
-	return false;
+	lastb = b;
     }
 
-    protected boolean isPreamble(String line) {
-	return startsWith(line, "<?xml ") || startsWith(line, "<!DOCTYPE") ||
-		startsWith(line, "<html") || startsWith(line, "<head>") ||
-		startsWith(line, "<meta");
+    @Override
+    public void write(char cbuf[]) throws IOException {
+	write(cbuf, 0, cbuf.length);
+    }
+
+    @Override
+    public void write(char cbuf[], int off, int len) throws IOException {
+	int start = off;
+
+	len += off;
+	for (int i = start; i < len ; i++) {
+	    if (cbuf[i] == '\r') {
+		out.write(cbuf, start, i - start);
+		out.write(newline);
+		start = i + 1;
+	    } else if (cbuf[i] == '\n') {
+		if (lastb != '\r') {
+		    out.write(cbuf, start, i - start);
+		    out.write(newline);
+		}
+		start = i + 1;
+	    }
+	    lastb = cbuf[i];
+	}
+	if ((len - start) > 0)
+	    out.write(cbuf, start, len - start);
     }
 }

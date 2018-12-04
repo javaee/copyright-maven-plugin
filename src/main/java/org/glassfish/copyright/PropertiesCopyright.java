@@ -83,7 +83,7 @@ public class PropertiesCopyright extends AbstractCopyright {
 	// skip blank lines at beginning of file
 	while ((line = r.readLine()) != null) {
 	    line = strip(line);
-	    if (line.startsWith("#!") || line.startsWith("# -*-"))
+	    if (skipHeaderLine(line))
 		continue;
 	    if (line.equals("#"))
 		continue;
@@ -125,7 +125,7 @@ public class PropertiesCopyright extends AbstractCopyright {
 	// skip blank lines at beginning of file
 	while ((line = in.readLine()) != null) {
 	    line = strip(line);
-	    if (line.startsWith("#!") || line.startsWith("# -*-")) {
+	    if (skipHeaderLine(line)) {
 		header.append(line).append('\n');
 		continue;
 	    }
@@ -179,7 +179,7 @@ public class PropertiesCopyright extends AbstractCopyright {
 	// skip blank lines at beginning of file
 	while ((line = in.readLine()) != null) {
 	    line = strip(line);
-	    if (line.startsWith("#!") || line.startsWith("# -*-")) {
+	    if (skipHeaderLine(line)) {
 		header.append(line).append('\n');
 		continue;
 	    }
@@ -243,5 +243,12 @@ public class PropertiesCopyright extends AbstractCopyright {
 	    } catch (IOException ex) { }
 	}
 	return out.toString();
+    }
+
+    /**
+     * Skip this header line?
+     */
+    protected boolean skipHeaderLine(String line) {
+	return line.startsWith("#!") || line.startsWith("# -*-");
     }
 }
